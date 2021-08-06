@@ -1,68 +1,55 @@
-use std::ops::{Add, AddAssign, Mul};
+use std::ops::{Add, AddAssign};
+
+use num::Unsigned;
 
 #[derive(Debug)]
-pub struct Days(u64);
+pub struct Days<T>(T)
+where
+    T: Unsigned;
 
-impl Add for Days {
-    type Output = Days;
+impl<T: Unsigned> Add for Days<T> {
+    type Output = Days<T>;
     fn add(self, rhs: Self) -> Self::Output {
         Days(self.0 + rhs.0)
     }
 }
 
-impl AddAssign for Days {
+impl<T: Unsigned + Copy> AddAssign for Days<T> {
     fn add_assign(&mut self, rhs: Self) {
         *self = Days(self.0 + rhs.0);
     }
 }
 
-impl Mul<u64> for Days {
-    type Output = Days;
-    fn mul(self, rhs: u64) -> Self::Output {
-        Days(self.0 * rhs)
-    }
-}
-
 #[derive(Debug)]
-pub struct Months(u64);
-impl Add for Months {
-    type Output = Months;
+pub struct Months<T>(T)
+where
+    T: Unsigned;
+impl<T: Unsigned> Add for Months<T> {
+    type Output = Months<T>;
     fn add(self, rhs: Self) -> Self::Output {
         Months(self.0 + rhs.0)
     }
 }
 
-impl AddAssign for Months {
+impl<T: Unsigned + Copy> AddAssign for Months<T> {
     fn add_assign(&mut self, rhs: Self) {
         *self = Months(self.0 + rhs.0);
     }
 }
 
-impl Mul<u64> for Months {
-    type Output = Months;
-    fn mul(self, rhs: u64) -> Self::Output {
-        Months(self.0 * rhs)
-    }
-}
-
 #[derive(Debug)]
-pub struct Years(u64);
-impl Add for Years {
-    type Output = Years;
+pub struct Years<T>(T)
+where
+    T: Unsigned;
+impl<T: Unsigned> Add for Years<T> {
+    type Output = Years<T>;
     fn add(self, rhs: Self) -> Self::Output {
         Years(self.0 + rhs.0)
     }
 }
 
-impl AddAssign for Years {
+impl<T: Unsigned + Copy> AddAssign for Years<T> {
     fn add_assign(&mut self, rhs: Self) {
         *self = Years(self.0 + rhs.0);
-    }
-}
-
-impl Mul<u64> for Years {
-    type Output = Years;
-    fn mul(self, rhs: u64) -> Self::Output {
-        Years(self.0 * rhs)
     }
 }
