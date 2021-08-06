@@ -15,9 +15,6 @@ mod dates {
     pub struct Month(u8);
 
     #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
-    pub struct DayofYear(u16);
-
-    #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
     pub struct FieldDate<T: Integer> {
         year: T,
         month: Month,
@@ -51,9 +48,9 @@ mod dates {
             let m1 = date.month.0;
             let d1 = date.day.0;
 
-            let j = match m1 < 3 {
-                true => 1,
-                false => 0,
+            let j = match m1 {
+                1 | 2 => 1,
+                _ => 0,
             };
 
             let y0 = y1 - j;
@@ -98,9 +95,9 @@ mod dates {
             let m0 = q3;
             let d0 = r3;
 
-            let j = match r2 >= 306 {
-                true => 1,
-                false => 0,
+            let j = match r2 {
+                0..=305 => 0,
+                _ => 1,
             };
 
             let y1 = y0 + j;
@@ -112,12 +109,6 @@ mod dates {
                 month: Month(m1 as u8),
                 day: Day(d1 as u8),
             }
-        }
-    }
-
-    impl From<DayofYear> for Month {
-        fn from(day: DayofYear) -> Self {
-            Month(((5_u16 * day.0 - 2_u16) / 153_u16) as u8)
         }
     }
 
@@ -156,7 +147,7 @@ mod dates {
     }
 
     impl Weekday {
-        pub const HIGH: u32 = 7;
+        pub const HIGH: u32 = 6;
     }
 
     impl Sub for Weekday {
@@ -169,7 +160,7 @@ mod dates {
             let days = w0.wrapping_sub(w1);
 
             match days {
-                days if days < Self::HIGH => days,
+                0..=Self::HIGH => days,
                 _ => days.wrapping_add(Self::HIGH),
             }
         }
@@ -183,7 +174,7 @@ mod dates {
 
             let days = day_u32.wrapping_sub(rhs);
             let weekday = match days {
-                days if days < Self::HIGH => days,
+                0..=Self::HIGH => days,
                 _ => days.wrapping_add(Self::HIGH),
             };
 
@@ -207,9 +198,9 @@ mod dates {
 
     pub const fn last_day_of_month(y: i32, m: Month) -> Day {
         match m.0 {
-            i if i != 2 => Day((m.0 ^ (m.0 >> 3)) | 30),
-            _ if is_leap_year(y) => Day(29),
-            _ => Day(28),
+            2 if is_leap_year(y) => Day(29),
+            2 => Day(28),
+            _ => Day((m.0 ^ (m.0 >> 3)) | 30),
         }
     }
 
