@@ -1,6 +1,5 @@
 use std::ops::{Add, AddAssign, Mul};
 
-
 #[derive(Debug)]
 pub struct Days(u64);
 
@@ -13,7 +12,7 @@ impl Add for Days {
 
 impl AddAssign for Days {
     fn add_assign(&mut self, rhs: Self) {
-        Days(self.0 + rhs.0);
+        *self = Days(self.0 + rhs.0);
     }
 }
 
@@ -35,7 +34,7 @@ impl Add for Months {
 
 impl AddAssign for Months {
     fn add_assign(&mut self, rhs: Self) {
-        Months(self.0 + rhs.0);
+        *self = Months(self.0 + rhs.0);
     }
 }
 
@@ -57,7 +56,7 @@ impl Add for Years {
 
 impl AddAssign for Years {
     fn add_assign(&mut self, rhs: Self) {
-        Years(self.0 + rhs.0);
+        *self = Years(self.0 + rhs.0);
     }
 }
 
