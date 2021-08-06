@@ -1,7 +1,10 @@
-pub mod date;
+pub mod date {
+    mod period;
+}
 
 #[cfg(test)]
 mod tests {
+
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);

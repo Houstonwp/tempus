@@ -1,7 +1,7 @@
 use std::ops::{Add, Sub};
 
 use num::Integer;
-pub mod period;
+use period;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct SerialDate<T: Integer> {
@@ -151,28 +151,30 @@ impl Weekday {
 }
 
 impl Sub for Weekday {
-    type Output = u32;
+    type Output = Days<u32>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         let w0 = self as u32;
         let w1 = rhs as u32;
 
-        let days = w0.wrapping_sub(w1);
+        let days_u32 = w0.wrapping_sub(w1);
 
-        match days {
-            0..=Self::HIGH => days,
-            _ => days.wrapping_add(Self::HIGH),
-        }
+        let days = match days_u32 {
+            0..=Self::HIGH => days_u32,
+            _ => days_u32.wrapping_add(Self::HIGH),
+        };
+
+        Days(days)
     }
 }
 
-impl Sub<u32> for Weekday {
+impl Sub<Days<u32>> for Weekday {
     type Output = Weekday;
 
-    fn sub(self, rhs: u32) -> Self::Output {
+    fn sub(self, rhs: Days<u32>) -> Self::Output {
         let day_u32 = self as u32;
 
-        let days = day_u32.wrapping_sub(rhs);
+        let days = day_u32.wrapping_sub(rhs.0);
         let weekday = match days {
             0..=Self::HIGH => days,
             _ => days.wrapping_add(Self::HIGH),
@@ -182,10 +184,10 @@ impl Sub<u32> for Weekday {
     }
 }
 
-impl Add<u32> for Weekday {
+impl Add<Days<u32>> for Weekday {
     type Output = Weekday;
-    fn add(self, rhs: u32) -> Self::Output {
-        Weekday::from((self as u32 + rhs) % 7)
+    fn add(self, rhs: Days<u32>) -> Self::Output {
+        Weekday::from((self as u32 + rhs.0) % 7)
     }
 }
 
@@ -215,3 +217,13 @@ pub const U_GREGORIAN: Calendar<u32> = Calendar {
         day: Day(1),
     },
 };
+
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn weekday_add() {
+        assert_eq!(Weekday::Monday + Days(2), Weekday::Wednesday);
+    }
+}
