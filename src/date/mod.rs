@@ -1,24 +1,36 @@
-use std::ops::{Add, Sub};
+use std::{fmt, ops::{Add, Sub}};
 
 use num::Integer;
 pub mod period;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub struct SerialDate<T: Integer> {
-    rd: T,
+    pub rd: T,
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
-pub struct Day(u8);
+impl fmt::Display for SerialDate<u32> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "rata die: {}", self.rd)
+    }
+}
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
-pub struct Month(u8);
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
+pub struct Day(pub u8);
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
+pub struct Month(pub u8);
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub struct FieldDate<T: Integer> {
-    year: T,
-    month: Month,
-    day: Day,
+    pub year: T,
+    pub month: Month,
+    pub day: Day,
+}
+
+impl fmt::Display for FieldDate<u32> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}-{}-{}", self.year, self.month.0, self.day.0)
+    }
 }
 
 #[derive(PartialEq, Eq, Debug)]
