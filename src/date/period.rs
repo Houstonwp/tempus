@@ -2,8 +2,8 @@ use std::ops::{Add, AddAssign};
 
 use num::Unsigned;
 
-#[derive(Debug)]
-pub struct Days<T>(T)
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Days<T>(pub T)
 where
     T: Unsigned;
 
@@ -20,8 +20,8 @@ impl<T: Unsigned + Copy> AddAssign for Days<T> {
     }
 }
 
-#[derive(Debug)]
-pub struct Months<T>(T)
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Months<T>(pub T)
 where
     T: Unsigned;
 impl<T: Unsigned> Add for Months<T> {
@@ -37,8 +37,8 @@ impl<T: Unsigned + Copy> AddAssign for Months<T> {
     }
 }
 
-#[derive(Debug)]
-pub struct Years<T>(T)
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Years<T>(pub T)
 where
     T: Unsigned;
 impl<T: Unsigned> Add for Years<T> {

@@ -1,7 +1,7 @@
 use std::ops::{Add, Sub};
 
 use num::Integer;
-use period;
+pub mod period;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct SerialDate<T: Integer> {
@@ -143,15 +143,15 @@ impl From<u32> for Weekday {
 }
 
 impl Day {
-    pub const HIGH: u32 = 31;
+    pub const MAX: u32 = 31;
 }
 
 impl Weekday {
-    pub const HIGH: u32 = 6;
+    pub const MAX: u32 = 6;
 }
 
 impl Sub for Weekday {
-    type Output = Days<u32>;
+    type Output = period::Days<u32>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         let w0 = self as u32;
@@ -160,33 +160,33 @@ impl Sub for Weekday {
         let days_u32 = w0.wrapping_sub(w1);
 
         let days = match days_u32 {
-            0..=Self::HIGH => days_u32,
-            _ => days_u32.wrapping_add(Self::HIGH),
+            0..=6 => days_u32,
+            _ => days_u32.wrapping_add(7),
         };
 
-        Days(days)
+        period::Days(days)
     }
 }
 
-impl Sub<Days<u32>> for Weekday {
+impl Sub<period::Days<u32>> for Weekday {
     type Output = Weekday;
 
-    fn sub(self, rhs: Days<u32>) -> Self::Output {
+    fn sub(self, rhs: period::Days<u32>) -> Self::Output {
         let day_u32 = self as u32;
 
         let days = day_u32.wrapping_sub(rhs.0);
         let weekday = match days {
-            0..=Self::HIGH => days,
-            _ => days.wrapping_add(Self::HIGH),
+            0..=6 => days,
+            _ => days.wrapping_add(7),
         };
 
         Weekday::from(weekday)
     }
 }
 
-impl Add<Days<u32>> for Weekday {
+impl Add<period::Days<u32>> for Weekday {
     type Output = Weekday;
-    fn add(self, rhs: Days<u32>) -> Self::Output {
+    fn add(self, rhs: period::Days<u32>) -> Self::Output {
         Weekday::from((self as u32 + rhs.0) % 7)
     }
 }
@@ -218,12 +218,28 @@ pub const U_GREGORIAN: Calendar<u32> = Calendar {
     },
 };
 
-
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     fn weekday_add() {
-        assert_eq!(Weekday::Monday + Days(2), Weekday::Wednesday);
+        assert_eq!(Weekday::Monday + period::Days(2), Weekday::Wednesday);
+        assert_eq!(Weekday::Wednesday + period::Days(7), Weekday::Wednesday);
+        assert_eq!(Weekday::Saturday + period::Days(2), Weekday::Monday);
+    }
+
+    #[test]
+    fn weekday_sub_period() {
+        assert_eq!(Weekday::Monday - period::Days(2), Weekday::Saturday);
+        assert_eq!(Weekday::Wednesday - period::Days(7), Weekday::Wednesday);
+        assert_eq!(Weekday::Saturday - period::Days(2), Weekday::Thursday);
+    }
+
+    #[test]
+    fn weekday_sub_weekday() {
+        assert_eq!(Weekday::Monday - Weekday::Saturday, period::Days(2));
+        assert_eq!(Weekday::Wednesday - Weekday::Wednesday, period::Days(0));
+        assert_eq!(Weekday::Saturday - Weekday::Thursday, period::Days(2));
     }
 }

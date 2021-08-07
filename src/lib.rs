@@ -1,6 +1,4 @@
-pub mod date {
-    mod period;
-}
+pub mod date;
 
 #[cfg(test)]
 mod tests {
