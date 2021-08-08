@@ -1,4 +1,9 @@
-use std::{fmt, ops::{Add, Sub}};
+use std::{
+    convert::{TryFrom, TryInto},
+    error::Error,
+    fmt,
+    ops::{Add, Sub},
+};
 
 use num::Integer;
 pub mod period;
@@ -19,6 +24,29 @@ pub struct Day(pub u8);
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub struct Month(pub u8);
+
+#[derive(Debug)]
+pub struct OutofBoundsError;
+
+impl Error for OutofBoundsError {}
+
+impl fmt::Display for OutofBoundsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Months must be between 1 and 12")
+    }
+}
+
+impl TryFrom<u8> for Month {
+    type Error = OutofBoundsError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        if (1..=12).contains(&value) {
+            Ok(Month(value))
+        } else {
+            Err(OutofBoundsError)
+        }
+    }
+}
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub struct FieldDate<T: Integer> {
@@ -83,6 +111,21 @@ impl From<FieldDate<u32>> for SerialDate<u32> {
 impl FieldDate<u32> {
     pub fn to_serial_date(self) -> SerialDate<u32> {
         SerialDate::<u32>::from(self)
+    }
+
+    pub fn new(y: u32, m: u8, d: u8) -> FieldDate<u32> {
+        let m0 = m.try_into().unwrap();
+        let ldm = last_day_of_month(y, m0);
+        if d > ldm.0 {
+            panic!("{:?} has {:?} days, got {}.", m0, ldm, d);
+        }
+        let d0 = Day(d);
+
+        FieldDate {
+            year: y,
+            month: m0,
+            day: d0,
+        }
     }
 }
 
@@ -203,14 +246,14 @@ impl Add<period::Days<u32>> for Weekday {
     }
 }
 
-pub const fn is_leap_year(y: i32) -> bool {
+pub const fn is_leap_year(y: u32) -> bool {
     y & match y % 100 {
         0 => 15,
         _ => 3,
     } == 0
 }
 
-pub const fn last_day_of_month(y: i32, m: Month) -> Day {
+pub const fn last_day_of_month(y: u32, m: Month) -> Day {
     match m.0 {
         2 if is_leap_year(y) => Day(29),
         2 => Day(28),
@@ -233,6 +276,24 @@ pub const U_GREGORIAN: Calendar<u32> = Calendar {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn field_date_new() {
+        assert_eq!(
+            FieldDate::new(2000, 1, 1),
+            FieldDate {
+                year: 2000,
+                month: Month(1),
+                day: Day(1)
+            }
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn field_date_new_invalid() {
+        FieldDate::new(2000, 14, 1);
+    }
 
     #[test]
     fn weekday_add() {

@@ -1,4 +1,4 @@
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use tempus::date::*;
 
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -15,22 +15,29 @@ fn from_field_date(c: &mut Criterion) {
     let y = 2000_u32;
     let m = Month(1);
     let d = Day(1);
-    let date = FieldDate{ year:y, month:m, day:d};
+    let date = FieldDate {
+        year: y,
+        month: m,
+        day: d,
+    };
 
-    c.bench_with_input(BenchmarkId::new("field to serial", date), &date, |b, &s|{ 
+    c.bench_with_input(BenchmarkId::new("field to serial", date), &date, |b, &s| {
         b.iter(|| SerialDate::from(s))
     });
 }
 
 fn from_serial_date(c: &mut Criterion) {
+    let x = SerialDate { rd: 16943 };
 
-    let x = SerialDate{rd:16943,};
-    
     c.bench_with_input(BenchmarkId::new("serial to field", x), &x, |b, &x| {
         b.iter(|| FieldDate::from(x));
     });
-
 }
 
-criterion_group!(benches, criterion_benchmark, from_field_date, from_serial_date);
+criterion_group!(
+    benches,
+    criterion_benchmark,
+    from_field_date,
+    from_serial_date
+);
 criterion_main!(benches);
