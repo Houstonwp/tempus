@@ -10,6 +10,6 @@ Thanks, appreciation, and inspiration go to many people. Giants have come before
 
 *  [Cassio Neri's Gregorian Calendar Algorithms](https://github.com/cassioneri/calendar) and [associated paper](https://arxiv.org/pdf/2102.06959.pdf) of which I aimed to implement his alogrithms in Rust.
 
-*  [Howard Hinnant's Webiste](http://howardhinnant.github.io/date_algorithms.html#Yes,%20but%20how%20do%20you%20know%20this%20all%20really%20works?) which provided context on the underlying Date algorithms found in the C++20 standard library (which was admittedly modified from his original implementation).
+*  [Howard Hinnant's Website](http://howardhinnant.github.io/date_algorithms.html#Yes,%20but%20how%20do%20you%20know%20this%20all%20really%20works?) which provided context on the underlying Date algorithms found in the C++20 standard library (which was admittedly modified from his original implementation).
 
 The Rust code in this library is pre-alpha. Given this is my first project and undertaking in Rust, it is likely inefficient (for now), incomplete (for now), and messy. Learning along the way and including documentation, error handling, and features as I'm able.
