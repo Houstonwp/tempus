@@ -19,8 +19,48 @@ impl fmt::Display for SerialDate<u32> {
     }
 }
 
+impl SerialDate<u32> {
+    pub fn to_field_date(self) -> FieldDate<u32> {
+        FieldDate::<u32>::from(self)
+    }
+
+    pub fn to_weekday(self) -> Weekday {
+        Weekday::from(self)
+    }
+}
+
+impl From<FieldDate<u32>> for SerialDate<u32> {
+    fn from(date: FieldDate<u32>) -> Self {
+        let y1 = date.year;
+        let m1 = date.month.0;
+        let d1 = date.day.0;
+
+        let j = match m1 {
+            1 | 2 => 1,
+            _ => 0,
+        };
+
+        let y0 = y1 - j;
+        let m0 = m1 as u32 + 12 * j;
+        let d0 = d1 - 1;
+
+        let q1 = y0 / 100;
+        let yc = 1461 * y0 / 4 - q1 + q1 / 4;
+        let mc = (979 * m0 - 2919) / 32;
+        let dc = d0 as u32;
+
+        let r1 = yc + mc + dc;
+
+        SerialDate { rd: r1 }
+    }
+}
+
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub struct Day(pub u8);
+
+impl Day {
+    pub const MAX: u32 = 31;
+}
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub struct Month(pub u8);
@@ -58,53 +98,6 @@ pub struct FieldDate<T: Integer> {
 impl fmt::Display for FieldDate<u32> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}-{}-{}", self.year, self.month.0, self.day.0)
-    }
-}
-
-#[derive(PartialEq, Eq, Debug)]
-pub enum Weekday {
-    Sunday,
-    Monday,
-    Tuesday,
-    Wednesday,
-    Thursday,
-    Friday,
-    Saturday,
-}
-
-impl SerialDate<u32> {
-    pub fn to_field_date(self) -> FieldDate<u32> {
-        FieldDate::<u32>::from(self)
-    }
-
-    pub fn to_weekday(self) -> Weekday {
-        Weekday::from(self)
-    }
-}
-
-impl From<FieldDate<u32>> for SerialDate<u32> {
-    fn from(date: FieldDate<u32>) -> Self {
-        let y1 = date.year;
-        let m1 = date.month.0;
-        let d1 = date.day.0;
-
-        let j = match m1 {
-            1 | 2 => 1,
-            _ => 0,
-        };
-
-        let y0 = y1 - j;
-        let m0 = m1 as u32 + 12 * j;
-        let d0 = d1 - 1;
-
-        let q1 = y0 / 100;
-        let yc = 1461 * y0 / 4 - q1 + q1 / 4;
-        let mc = (979 * m0 - 2919) / 32;
-        let dc = d0 as u32;
-
-        let r1 = yc + mc + dc;
-
-        SerialDate { rd: r1 }
     }
 }
 
@@ -167,6 +160,17 @@ impl From<SerialDate<u32>> for FieldDate<u32> {
     }
 }
 
+#[derive(PartialEq, Eq, Debug)]
+pub enum Weekday {
+    Sunday,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+}
+
 impl From<SerialDate<u32>> for Weekday {
     fn from(date: SerialDate<u32>) -> Self {
         match (date.rd + 3) % 7 {
@@ -195,10 +199,6 @@ impl From<u32> for Weekday {
             _ => panic!("Date is out of bounds."),
         }
     }
-}
-
-impl Day {
-    pub const MAX: u32 = 31;
 }
 
 impl Weekday {
