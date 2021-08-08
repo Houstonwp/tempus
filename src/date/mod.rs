@@ -26,24 +26,24 @@ pub struct Day(pub u8);
 pub struct Month(pub u8);
 
 #[derive(Debug)]
-pub struct OutofBoundsError;
+pub struct MonthOutofRangeError;
 
-impl Error for OutofBoundsError {}
+impl Error for MonthOutofRangeError {}
 
-impl fmt::Display for OutofBoundsError {
+impl fmt::Display for MonthOutofRangeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Months must be between 1 and 12")
     }
 }
 
 impl TryFrom<u8> for Month {
-    type Error = OutofBoundsError;
+    type Error = MonthOutofRangeError;
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         if (1..=12).contains(&value) {
             Ok(Month(value))
         } else {
-            Err(OutofBoundsError)
+            Err(MonthOutofRangeError)
         }
     }
 }
