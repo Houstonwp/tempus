@@ -306,6 +306,12 @@ mod tests {
     }
 
     #[test]
+    fn serial_date_roundtrip() {
+        let serial_date = SerialDate { rd: 10000 };
+        assert_eq!(serial_date, serial_date.to_field_date().to_serial_date());
+    }
+
+    #[test]
     fn unix_epoch() {
         let unix_epoch = FieldDate::new(1970, 1, 1).to_serial_date();
         let unix_weekday = unix_epoch.to_weekday();
