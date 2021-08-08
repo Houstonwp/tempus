@@ -106,6 +106,10 @@ impl FieldDate<u32> {
         SerialDate::<u32>::from(self)
     }
 
+    pub fn to_weekday(self) -> Weekday {
+        self.to_serial_date().to_weekday()
+    }
+
     pub fn new(y: u32, m: u8, d: u8) -> FieldDate<u32> {
         let m0 = m.try_into().unwrap();
         let ldm = last_day_of_month(y, m0);
@@ -160,7 +164,7 @@ impl From<SerialDate<u32>> for FieldDate<u32> {
     }
 }
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub enum Weekday {
     Sunday,
     Monday,
@@ -293,6 +297,15 @@ mod tests {
     #[should_panic]
     fn field_date_new_invalid() {
         FieldDate::new(2000, 14, 1);
+    }
+
+    #[test]
+    fn unix_epoch() {
+        let unix_epoch = FieldDate::new(1970,1,1).to_serial_date();
+        let unix_weekday = unix_epoch.to_weekday();
+        assert_eq!(unix_weekday, Weekday::Thursday);
+        assert_eq!(unix_weekday - period::Days(1), Weekday::Wednesday);
+        assert_eq!(unix_weekday + period::Days(1), Weekday::Friday);
     }
 
     #[test]
