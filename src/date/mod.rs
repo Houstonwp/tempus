@@ -300,8 +300,14 @@ mod tests {
     }
 
     #[test]
+    fn field_date_roundtrip() {
+        let unix_epoch = FieldDate::new(1970, 1, 1);
+        assert_eq!(unix_epoch, unix_epoch.to_serial_date().to_field_date());
+    }
+
+    #[test]
     fn unix_epoch() {
-        let unix_epoch = FieldDate::new(1970,1,1).to_serial_date();
+        let unix_epoch = FieldDate::new(1970, 1, 1).to_serial_date();
         let unix_weekday = unix_epoch.to_weekday();
         assert_eq!(unix_weekday, Weekday::Thursday);
         assert_eq!(unix_weekday - period::Days(1), Weekday::Wednesday);
