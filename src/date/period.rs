@@ -53,3 +53,13 @@ impl<T: Unsigned + Copy> AddAssign for Years<T> {
         *self = Years(self.0 + rhs.0);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_days() {
+        assert_eq!(Days(1_u32) + Days(2_u32), Days(3_u32))
+    }
+}
