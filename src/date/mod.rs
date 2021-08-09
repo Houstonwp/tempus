@@ -2,7 +2,7 @@ use std::{
     convert::{TryFrom, TryInto},
     error::Error,
     fmt,
-    ops::{Add, Sub},
+    ops::{Add, AddAssign, Sub, SubAssign},
 };
 
 use num::Integer;
@@ -26,6 +26,36 @@ impl SerialDate<u32> {
 
     pub fn to_weekday(self) -> Weekday {
         Weekday::from(self)
+    }
+}
+
+impl Add<period::Days<u32>> for SerialDate<u32> {
+    type Output = SerialDate<u32>;
+    fn add(self, rhs: period::Days<u32>) -> Self::Output {
+        SerialDate {
+            rd: self.rd + rhs.0,
+        }
+    }
+}
+
+impl AddAssign<period::Days<u32>> for SerialDate<u32> {
+    fn add_assign(&mut self, rhs: period::Days<u32>) {
+        *self = self.add(rhs)
+    }
+}
+
+impl Sub<period::Days<u32>> for SerialDate<u32> {
+    type Output = SerialDate<u32>;
+    fn sub(self, rhs: period::Days<u32>) -> Self::Output {
+        SerialDate {
+            rd: self.rd - rhs.0,
+        }
+    }
+}
+
+impl SubAssign<period::Days<u32>> for SerialDate<u32> {
+    fn sub_assign(&mut self, rhs: period::Days<u32>) {
+        *self = self.sub(rhs)
     }
 }
 
@@ -123,6 +153,32 @@ impl FieldDate<u32> {
             month: m0,
             day: d0,
         }
+    }
+}
+
+impl Add<period::Days<u32>> for FieldDate<u32> {
+    type Output = FieldDate<u32>;
+    fn add(self, rhs: period::Days<u32>) -> Self::Output {
+        self.to_serial_date().add(rhs).to_field_date()
+    }
+}
+
+impl AddAssign<period::Days<u32>> for FieldDate<u32> {
+    fn add_assign(&mut self, rhs: period::Days<u32>) {
+        *self = self.add(rhs)
+    }
+}
+
+impl Sub<period::Days<u32>> for FieldDate<u32> {
+    type Output = FieldDate<u32>;
+    fn sub(self, rhs: period::Days<u32>) -> Self::Output {
+        self.to_serial_date().sub(rhs).to_field_date()
+    }
+}
+
+impl SubAssign<period::Days<u32>> for FieldDate<u32> {
+    fn sub_assign(&mut self, rhs: period::Days<u32>) {
+        *self = self.sub(rhs)
     }
 }
 
