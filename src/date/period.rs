@@ -1,8 +1,8 @@
 use std::ops::{Add, AddAssign};
 
-use num::Unsigned;
+use num::{NumCast, Unsigned};
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Days<T>(pub T)
 where
     T: Unsigned;
@@ -20,24 +20,24 @@ impl<T: Unsigned + Copy> AddAssign for Days<T> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Months<T>(pub T)
 where
-    T: Unsigned;
-impl<T: Unsigned> Add for Months<T> {
+    T: Unsigned + NumCast;
+impl<T: Unsigned + NumCast> Add for Months<T> {
     type Output = Months<T>;
     fn add(self, rhs: Self) -> Self::Output {
         Months(self.0 + rhs.0)
     }
 }
 
-impl<T: Unsigned + Copy> AddAssign for Months<T> {
+impl<T: Unsigned + NumCast + Copy> AddAssign for Months<T> {
     fn add_assign(&mut self, rhs: Self) {
         *self = Months(self.0 + rhs.0);
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Years<T>(pub T)
 where
     T: Unsigned;

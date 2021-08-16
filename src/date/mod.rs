@@ -2,10 +2,12 @@ use std::{
     convert::{TryFrom, TryInto},
     error::Error,
     fmt,
-    ops::{Add, AddAssign, Sub, SubAssign},
+    ops::{Add, AddAssign, BitAnd, Sub, SubAssign},
 };
 
-use num::Integer;
+use num::{Bounded, Integer, NumCast};
+
+use self::period::Months;
 pub mod period;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
@@ -89,7 +91,7 @@ impl From<FieldDate<u32>> for SerialDate<u32> {
 pub struct Day(pub u8);
 
 impl Day {
-    pub const MAX: u32 = 31;
+    pub const MAX: u8 = 31;
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
@@ -106,17 +108,35 @@ impl fmt::Display for MonthOutofRangeError {
     }
 }
 
-impl TryFrom<u8> for Month {
-    type Error = MonthOutofRangeError;
+macro_rules! month_try_from {
+    ($($t: ty)*) => ($(
+        impl TryFrom<$t> for Month {
+            type Error = MonthOutofRangeError;
 
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if (1..=12).contains(&value) {
-            Ok(Month(value))
-        } else {
-            Err(MonthOutofRangeError)
+            fn try_from(value: $t) -> Result<Self, Self::Error> {
+                if (1..=12).contains(&value) {
+                    Ok(Month(value.try_into().unwrap()))
+                } else {
+                    Err(MonthOutofRangeError)
+                }
+            }
         }
-    }
+    )*)
 }
+
+month_try_from!( usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 );
+
+macro_rules! int_from_month {
+    ($($t: ty)*) => ($(
+        impl From<Month> for $t {
+            fn from(value: Month) -> $t {
+                value.0 as $t
+            }
+        }
+    )*)
+}
+
+int_from_month!( usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 );
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
 pub struct FieldDate<T: Integer> {
@@ -131,6 +151,30 @@ impl fmt::Display for FieldDate<u32> {
     }
 }
 
+macro_rules! impl_bounded_field_date {
+    ($($t: ty)*) => ($(
+        impl Bounded for FieldDate<$t> {
+            fn min_value() -> Self {
+                FieldDate {
+                    year: <$t>::MIN,
+                    month: Month(1),
+                    day: Day(1),
+                }
+            }
+
+            fn max_value() -> Self {
+                FieldDate {
+                    year: <$t>::MAX,
+                    month: Month(12),
+                    day: Day(31),
+                }
+            }
+        }
+    )*)
+}
+
+impl_bounded_field_date! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 }
+
 impl FieldDate<u32> {
     pub fn to_serial_date(self) -> SerialDate<u32> {
         SerialDate::<u32>::from(self)
@@ -140,9 +184,39 @@ impl FieldDate<u32> {
         self.to_serial_date().to_weekday()
     }
 
+    pub fn wrapping_add(self, rhs: Months<u32>) -> FieldDate<u32> {
+        let FieldDate { year, month, day } = self;
+        let y_add: u32 = (<u32 as From<Month>>::from(month) + rhs.0 - 1) / 12;
+        let m_add: u8 = ((<u32 as From<Month>>::from(month) + rhs.0 - 1) % 12 + 1)
+            .try_into()
+            .unwrap();
+        let eom = last_day_of_month(
+            &(year + y_add),
+            &Month(<u8 as From<Month>>::from(month) + m_add),
+        )
+        .0;
+
+        match day.0 > eom {
+            true => FieldDate::new(year + y_add, month.0 + m_add + 1, day.0 - eom),
+            false => FieldDate::new(year + y_add, month.0 + m_add, day.0),
+        }
+    }
+
+    pub fn wrapping_sub(self, rhs: Months<u32>) -> FieldDate<u32> {
+        let FieldDate { year, month, day } = self;
+        let y_add = rhs.0 / 12;
+        let m_add: u8 = (rhs.0 % 12).try_into().unwrap();
+        let eom = last_day_of_month(&(year - y_add), &Month(month.0 + m_add)).0;
+
+        match day.0 > eom {
+            true => FieldDate::new(year + y_add, month.0 + m_add + 1, day.0 - eom),
+            false => FieldDate::new(year + y_add, month.0 + m_add, day.0),
+        }
+    }
+
     pub fn new(y: u32, m: u8, d: u8) -> FieldDate<u32> {
         let m0 = m.try_into().unwrap();
-        let ldm = last_day_of_month(y, m0);
+        let ldm = last_day_of_month(&y, &m0);
         if d > ldm.0 {
             panic!("{:?} has {:?} days, got {}.", m0, ldm, d);
         }
@@ -306,14 +380,31 @@ impl Add<period::Days<u32>> for Weekday {
     }
 }
 
-pub const fn is_leap_year(y: u32) -> bool {
-    y & match y % 100 {
-        0 => 15,
-        _ => 3,
-    } == 0
+pub trait Year: Integer + BitAnd<Output = Self> + NumCast + Copy {}
+
+impl Year for u32 {}
+impl Year for i32 {}
+impl Year for u64 {}
+impl Year for i64 {}
+impl Year for isize {}
+impl Year for usize {}
+
+pub fn is_leap_year<T>(y: &T) -> bool
+where
+    T: Year,
+{
+    let bitop = if *y % NumCast::from(100).unwrap() == T::zero() {
+        NumCast::from(15).unwrap()
+    } else {
+        NumCast::from(3).unwrap()
+    };
+    *y & bitop == NumCast::from(0).unwrap()
 }
 
-pub const fn last_day_of_month(y: u32, m: Month) -> Day {
+pub fn last_day_of_month<T>(y: &T, m: &Month) -> Day
+where
+    T: Year,
+{
     match m.0 {
         2 if is_leap_year(y) => Day(29),
         2 => Day(28),
@@ -325,13 +416,13 @@ pub struct Calendar<T: Integer> {
     pub epoch: FieldDate<T>,
 }
 
-pub const U_GREGORIAN: Calendar<u32> = Calendar {
-    epoch: FieldDate {
-        year: 0,
-        month: Month(3),
-        day: Day(1),
-    },
-};
+// pub const U_GREGORIAN: Calendar<u32> = Calendar {
+//     epoch: FieldDate {
+//         year: 0,
+//         month: Month(3),
+//         day: Day(1),
+//     },
+// };
 
 #[cfg(test)]
 mod tests {
