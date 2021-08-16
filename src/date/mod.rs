@@ -173,7 +173,7 @@ macro_rules! impl_bounded_field_date {
     )*)
 }
 
-impl_bounded_field_date! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 }
+impl_bounded_field_date! { usize u32 u64 u128 isize i32 i64 i128 }
 
 impl FieldDate<u32> {
     pub fn to_serial_date(self) -> SerialDate<u32> {
