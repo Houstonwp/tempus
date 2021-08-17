@@ -176,8 +176,8 @@ macro_rules! impl_bounded_field_date {
 impl_bounded_field_date! { usize u32 u64 u128 isize i32 i64 i128 }
 
 impl FieldDate<u32> {
-    pub fn to_serial_date(self) -> SerialDate<u32> {
-        SerialDate::<u32>::from(self)
+    pub fn to_serial_date(&self) -> SerialDate<u32> {
+        SerialDate::<u32>::from(*self)
     }
 
     pub fn to_weekday(self) -> Weekday {
@@ -412,8 +412,29 @@ where
     }
 }
 
-pub struct Calendar<T: Integer> {
-    pub epoch: FieldDate<T>,
+pub trait Calendar<Y: Year, R: Year> {
+    const EPOCH: FieldDate<Y>;
+
+    fn to_serial_date(u1: &FieldDate<Y>) -> SerialDate<R>;
+    fn to_field_date(r0: SerialDate<R>) -> FieldDate<Y>;
+}
+
+pub struct UGregorian {}
+
+impl Calendar<u32, u32> for UGregorian {
+    const EPOCH: FieldDate<u32> = FieldDate {
+        year: 0,
+        month: Month(3),
+        day: Day(1),
+    };
+
+    fn to_serial_date(u1: &FieldDate<u32>) -> SerialDate<u32> {
+        u1.to_serial_date()
+    }
+
+    fn to_field_date(r0: SerialDate<u32>) -> FieldDate<u32> {
+        r0.to_field_date()
+    }
 }
 
 // pub const U_GREGORIAN: Calendar<u32> = Calendar {
